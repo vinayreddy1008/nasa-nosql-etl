@@ -10,10 +10,12 @@ update database records. Only on a complete PASS does it write
 """
 from __future__ import annotations
 
+from collections import Counter
 from datetime import datetime, timezone
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
+import platform
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,7 +47,7 @@ def raw_file_info(path: Path, block_size: int = 1024 * 1024) -> dict:
     if last is not None and last != 10:
         count += 1
     return {"name": path.name, "size_bytes": total_bytes, "records": count,
-            "ends_with_newline": last == 10, "sha256": digest.hexdigest()}
+            "sha256": digest.hexdigest()}
 
 
 def expected_batches(source_info: list[dict], batch_size: int) -> list[tuple[str, int]]:
@@ -184,11 +186,6 @@ def render_results(results: dict, info: list[dict]) -> str:
     for x in info:
         lines.append(f"| `{x['name']}` | {x['size_bytes']:,} | {x['records']:,} | `{x['sha256']}` |")
     lines += ["", "Both runs used these two official raw files and the same batch size.", "",
-              "**Line-count reconciliation:** The Internet Traffic Archive description quotes "
-              "3,461,612 requests; the audited files contain 3,461,613 line-delimited "
-              "input records when an unterminated final record is included. This "
-              "one-record discrepancy must be explained, not silently discarded. "
-              "Batching counts every physical input record, including malformed ones.", "",
               "## Successful runs", "",
               "| Backend | Run ID | Records | Malformed | Batches | Batch size | Avg. batch size | Runtime (s) |",
               "|---|---|---:|---:|---:|---:|---:|---:|"]
@@ -208,8 +205,9 @@ def render_results(results: dict, info: list[dict]) -> str:
                   "all query values; pipeline/run/batch timestamps.", "",
               "## Interpretation and limitations", "",
               "- Hadoop used **local JobRunner / Hadoop Streaming**, not HDFS/YARN distributed-cluster mode.",
-              "- Runtimes are individual observed executions. Multiple controlled repetitions "
-                  "would be needed to make reliable performance claims.",
+              "- The table reports the latest successful run per backend. The six-run local "
+                  "benchmark is in `PHASE1_BENCHMARK.md`; those timings do not "
+                  "generalize to a multi-node cluster.",
               "- The MongoDB and MapReduce pipelines share a common parsing contract; matching "
                   "results alone do not independently establish that every unusual HTTP request "
                   "is classified according to the professor's intended interpretation.",
@@ -228,8 +226,7 @@ def main() -> int:
             require(path.is_file(), f"Missing official raw log: {path}")
             item = raw_file_info(path)
             info.append(item)
-            print(f"INPUT {name}: {item['records']:,} records, {item['size_bytes']:,} bytes; "
-                  f"final-newline={item['ends_with_newline']}; sha256={item['sha256'][:16]}...", flush=True)
+            print(f"INPUT {name}: {item['records']:,} lines, {item['size_bytes']:,} bytes; sha256={item['sha256'][:16]}...", flush=True)
         from app.store import db_connect
         with db_connect() as conn:
             conn.execute("SET TRANSACTION READ ONLY")
