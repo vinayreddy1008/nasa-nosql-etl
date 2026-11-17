@@ -1,6 +1,6 @@
 # Phase 1 — Verified execution evidence
 
-Generated from a **read-only PostgreSQL + raw NASA log audit** at 2026-11-17 03:43 UTC.
+Generated from a **read-only PostgreSQL + raw NASA log audit** at 2026-11-17 03:54 UTC.
 This document reports observed runs; it is not a fabricated benchmark or a multi-node Hadoop claim.
 
 ## Official input
@@ -18,8 +18,8 @@ Both runs used these two official raw files and the same batch size.
 
 | Backend | Run ID | Records | Malformed | Batches | Batch size | Avg. batch size | Runtime (s) |
 |---|---|---:|---:|---:|---:|---:|---:|
-| mongo | `20261117T024856Z_10747678` | 3,461,613 | 3,930 | 35 | 100,000 | 98903.2286 | 97.733665 |
-| mapreduce | `20261117T032602Z_9b1c5938` | 3,461,613 | 3,930 | 35 | 100,000 | 98903.2286 | 30.855376 |
+| mongo | `20261117T035237Z_09ff3bbd` | 3,461,613 | 3,930 | 35 | 100,000 | 98903.2286 | 79.310127 |
+| mapreduce | `20261117T035356Z_8eb95601` | 3,461,613 | 3,930 | 35 | 100,000 | 98903.2286 | 30.688851 |
 
 ## Query correctness
 
