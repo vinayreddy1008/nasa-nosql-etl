@@ -42,7 +42,7 @@ git add -u
 git add README.md requirements.txt compose.yaml Dockerfile.hadoop
 # Stage Git's tracked configuration and project sources, but never data/work contents.
 git add .gitignore .dockerignore .env.example
-git add app common pipelines sql scripts tests docs
+git add app common pipelines sql scripts tests docs .github
 
 git diff --cached --check
 

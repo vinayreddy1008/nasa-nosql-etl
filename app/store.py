@@ -99,17 +99,23 @@ def compare_latest():
             if len(latest) != 2:
                 print('Need successful runs from both mongo and mapreduce'); return False
             mongo,mr=latest['mongo'],latest['mapreduce']
-            assert mongo[2] == mr[2], 'Input manifest differs; comparison would be unfair'
-            assert mongo[3] == mr[3], 'Batch sizes differ; comparison would be unfair'
+            if mongo[2] != mr[2]:
+                print('FAIL: Input manifest differs; comparison would be unfair')
+                return False
+            if mongo[3] != mr[3]:
+                print('FAIL: Batch sizes differ; comparison would be unfair')
+                return False
             for table, cols in [
                 ('q1_daily_traffic','log_date,status_code,request_count,total_bytes'),
                 ('q2_top_resources','resource_path,request_count,total_bytes,distinct_host_count'),
-                ('q3_hourly_errors','log_date,log_hour,error_request_count,total_request_count,distinct_error_hosts')]:
+                ('q3_hourly_errors','log_date,log_hour,error_request_count,total_request_count,error_rate,distinct_error_hosts')]:
                 datasets=[]
                 for run in (mongo,mr):
                     cur.execute(f'SELECT {cols} FROM {table} WHERE run_id=%s ORDER BY 1,2',(run[0],))
                     datasets.append(cur.fetchall())
-                assert datasets[0]==datasets[1], f'Wrong output / schema mismatch in {table}'
+                if datasets[0] != datasets[1]:
+                    print(f'FAIL: Wrong output / schema mismatch in {table}')
+                    return False
                 print(f'PASS {table}: {len(datasets[0])} identical rows')
             print('PASS: identical datasets, batch sizes and all Q1/Q2/Q3 integer results')
             print(f'Runtimes: MongoDB {mongo[4]}s; MapReduce {mr[4]}s')
