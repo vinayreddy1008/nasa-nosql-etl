@@ -1,0 +1,13 @@
+# Hadoop Streaming with the local MapReduce JobRunner. The platform is pinned to
+# linux/amd64 because Apache's 3.5.0 GHCR image supports amd64 and arm64.
+FROM ghcr.io/apache/hadoop:3.5.0
+USER root
+RUN set -eux; \
+    if ! command -v python3 >/dev/null 2>&1; then \
+      if command -v apt-get >/dev/null 2>&1; then apt-get update && apt-get install -y python3 && rm -rf /var/lib/apt/lists/*; \
+      elif command -v dnf >/dev/null 2>&1; then dnf install -y python3; \
+      elif command -v microdnf >/dev/null 2>&1; then microdnf install -y python3; \
+      elif command -v yum >/dev/null 2>&1; then yum install -y python3; \
+      else echo 'Cannot install Python 3 in Hadoop image' >&2; exit 1; fi; \
+    fi
+WORKDIR /workspace

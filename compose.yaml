@@ -1,0 +1,41 @@
+services:
+  mongodb:
+    image: mongo:8.0
+    ports:
+      - '127.0.0.1:27018:27017'
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', 'db.adminCommand({ping:1}).ok']
+      interval: 10s
+      timeout: 5s
+      retries: 20
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: nosql
+      POSTGRES_PASSWORD: nosql
+      POSTGRES_DB: nosql_analytics
+    ports:
+      - '127.0.0.1:5437:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nosql -d nosql_analytics']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  hadoop:
+    profiles: ['mapreduce']
+    build:
+      context: .
+      dockerfile: Dockerfile.hadoop
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    environment:
+      HADOOP_CLIENT_OPTS: '-Xmx1024m'
+    command: ['sleep', 'infinity']
+volumes:
+  mongo_data:
+  postgres_data:
